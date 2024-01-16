@@ -31,10 +31,10 @@ class VisualFeedback(Node):
     def _get_pointer_properties(self, alpha_value):
         # Each tuple defines a value range, an angle range, and a color
         sectors = [
-            ((0, 2), (135, 180), 'red'),
-            ((2, 4), (90, 135), 'yellow'),
-            ((4, 6), (45, 90), 'orange'),
-            ((6, float('inf')), (0, 45), 'green')
+            ((0, 100), (135, 180), 'red'),
+            ((100, 110), (90, 135), 'orange'),
+            ((110, 120), (45, 90), 'yellow'),
+            ((120, 200), (0, 45), 'green')
         ]
         
         for value_range, angle_range, color in sectors:
@@ -75,4 +75,3 @@ class VisualFeedback(Node):
         end_x = 180 + 120 * np.cos(rad)
         end_y = 160 - 120 * np.sin(rad)
         self.canvas.coords(self.pointer, 180, 160, end_x, end_y)
-
