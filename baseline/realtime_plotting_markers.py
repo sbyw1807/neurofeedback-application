@@ -1,76 +1,87 @@
+import sys
 import time
-import pyqtgraph as pg
-from pylsl import StreamInlet, resolve_stream
-from collections import deque
 import numpy as np
+from pylsl import StreamInlet, resolve_stream
+import pyqtgraph as pg
+from collections import deque
+from PyQt5.QtCore import Qt  
 
-# Resolve the alpha power stream
-print("Looking for streams of type 'Markers'...")
-streams = resolve_stream('type', 'Markers')
+# Initialize PyQtGraph with enhanced aesthetics
+app = pg.mkQApp("LSL Stream Visualization")
+win = pg.GraphicsLayoutWidget(show=True, title="Real-Time Stream Visualization")
+plot = win.addPlot(title="Stream Data")
+plot.setLabel('left', 'Amplitude')
+plot.setLabel('bottom', 'Time (s)')
+plot.getAxis("left").tickFont = pg.QtGui.QFont("Arial", 12)
+plot.getAxis("bottom").tickFont = pg.QtGui.QFont("Arial", 12)
+plot.addLegend(offset=(30, 30))
 
-# Print information about the detected stream
-if streams:
-    stream_info = streams[0]
-    print("Detected Stream Info:")
-    print("Name:", stream_info.name())
-    print("Type:", stream_info.type())
-    print("Channels:", stream_info.channel_count())
-    print("Sample Rate:", stream_info.nominal_srate())
-else:
-    print("No suitable stream found.")
+# Customize the legend
+legend = plot.legend
+legend.setAutoFillBackground(False)
+legend.setFont(pg.QtGui.QFont("Arial", 12))
 
-# Assuming your stream is the first one found
-inlet = StreamInlet(streams[0]) if streams else None
+# Create curves for each stream with new colors and line styles
+alpha_curve = plot.plot(pen=pg.mkPen(color='b', width=2), name='Alpha Power')
+theta_curve = plot.plot(pen=pg.mkPen(color=(148, 0, 211), style=Qt.DashLine, width=2), name='Theta Power')
+beta_curve = plot.plot(pen=pg.mkPen(color='turquoise', style=Qt.DotLine, width=2), name='Beta Power')
 
-# Initialize pyqtgraph
-app = pg.mkQApp("Alpha Power Visualization") if inlet else None
-win = pg.GraphicsLayoutWidget(show=True, title="Real Time Alpha Power") if inlet else None
-plot = win.addPlot(title="Alpha Power") if inlet else None
-curve = plot.plot(pen='y') if inlet else None
+# Resolve LSL streams
+def resolve_lsl_stream(stream_name):
+    print(f"Looking for {stream_name} stream...")
+    streams = resolve_stream('name', stream_name)
+    if not streams:
+        print(f"{stream_name} stream not found.")
+        sys.exit(1)
+    return StreamInlet(streams[0])
 
-# Add grid
-plot.showGrid(x=True, y=True, alpha=0.5)
+alpha_inlet = resolve_lsl_stream('AlphaPower')
+theta_inlet = resolve_lsl_stream('ThetaPower')
+beta_inlet = resolve_lsl_stream('BetaPower')
 
-# Set axis labels
-plot.setLabel('left', 'Alpha Power')
-plot.setLabel('bottom', 'Time', units='s')
+# Buffer for the plot
+buffer_size = 500
+alpha_data = deque(maxlen=buffer_size)
+theta_data = deque(maxlen=buffer_size)
+beta_data = deque(maxlen=buffer_size)
+time_data = deque(maxlen=buffer_size)
 
-# Set title
-plot.setTitle('Real Time Alpha Power Monitoring')
-
-# Initialize a fixed-size buffer for data
-buffer_size = 500  # Adjust this to how many points you want to display at once
-data_buffer = deque(maxlen=buffer_size)
-time_buffer = deque(maxlen=buffer_size)
-
-# Use the current time to set an initial value for the x-axis
+# Start time for the x-axis
 start_time = time.time()
 
 def update():
-    print("Updating plot...")
-    global start_time
-    sample, timestamp = inlet.pull_sample(timeout=0.0) if inlet else (None, None)
-    if sample:
-        # Update the start time only once
-        if not time_buffer:
-            start_time = time.time()
+    # Pull sample from each stream
+    alpha_sample, _ = alpha_inlet.pull_sample(timeout=0.0)
+    theta_sample, _ = theta_inlet.pull_sample(timeout=0.0)
+    beta_sample, _ = beta_inlet.pull_sample(timeout=0.0)
 
-        # Calculate the elapsed time since the start of the plotting
-        elapsed_time = time.time() - start_time
-        print("Received sample:", sample, "at time:", elapsed_time)
+    new_data = False
 
-        # Append the new data to the buffers
-        time_buffer.append(elapsed_time)
-        data_buffer.append(sample[0])
+    if alpha_sample:
+        alpha_data.append(alpha_sample[0])
+        new_data = True
+    if theta_sample:
+        theta_data.append(theta_sample[0])
+        new_data = True
+    if beta_sample:
+        beta_data.append(beta_sample[0])
+        new_data = True
 
-        # Update the plot with the data in the buffers
-        curve.setData(np.array(time_buffer), np.array(data_buffer))
+    if new_data:
+        current_time = time.time() - start_time
+        time_data.append(current_time)
 
-# Update the plot every 500 ms
-timer = pg.QtCore.QTimer() if inlet else None
-if timer:
-    timer.timeout.connect(update)
-    timer.start(500)  
-    app.exec_()
-else:
-    print("No suitable stream found.")
+        # Update the plots
+        alpha_curve.setData(np.array(time_data), np.array(alpha_data))
+        theta_curve.setData(np.array(time_data), np.array(theta_data))
+        beta_curve.setData(np.array(time_data), np.array(beta_data))
+
+# Timer to update the plot
+timer = pg.QtCore.QTimer()
+timer.timeout.connect(update)
+timer.start(500)  # Update interval in milliseconds
+
+# Start the PyQtGraph application
+if __name__ == '__main__':
+    if not app.exec_():
+        sys.exit(app.exec_())
