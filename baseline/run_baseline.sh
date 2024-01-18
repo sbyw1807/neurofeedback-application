@@ -1,37 +1,32 @@
 #!/bin/bash
 
-# Initialize conda
-source /opt/anaconda3/etc/profile.d/conda.sh || exit 1  # Adjust the path as needed
+# Path to your Anaconda 'activate' script and your environment name
+ANACONDA_ACTIVATE_SCRIPT="/opt/anaconda3/etc/profile.d/conda.sh"
+ENV_NAME="neurofeedback"
 
-# Activate conda environment
-conda activate neurofeedback || exit 1  # Exit if activation fails
+# Activate Anaconda environment
+source "$ANACONDA_ACTIVATE_SCRIPT"
+conda activate "$ENV_NAME"
 
-# Path to your Python environment (replace with your actual path)
-PYTHON_EXECUTABLE="/opt/anaconda3/envs/neurofeedback/bin/python"
+# Start Timeflux YAML script
+timeflux -d /Users/Sophia/neurofeedback_baseline.yml &
+PID_TIMEFLUX=$!
 
-# Function to run the entire process with a timeout
-run_neurofeedback() {
-    gtimeout 30s bash -c '
-        # Run timeflux graph in the background
-        timeflux -d /Users/Sophia/neurofeedback_baseline.yml &
-        TIMEFLUX_PID=$!
+# Wait for a few seconds before starting other scripts
+sleep 5
 
-        # Sleep for a few seconds to allow timeflux to initialize
-        sleep 5
+# Start real-time plotting Python script
+python /Users/Sophia/realtime_plotting_markers.py &
+PID_PLOT=$!
 
-        # Run the baseline measurement script in the background
-        $0 /Users/Sophia/baseline_measurement.py &
+# Wait for 15 seconds (total of 20 seconds since Timeflux started)
+sleep 15
 
-        # Run the plotting script in the background
-        $0 /Users/Sophia/realtime_plotting_marker.py &
+# Stop all processes
+kill $PID_TIMEFLUX $PID_PLOT
 
-        # Wait for all background processes to finish
-        wait $TIMEFLUX_PID
-    ' "$PYTHON_EXECUTABLE"
-}
-
-# Run the entire process with a timeout
-run_neurofeedback
+# Optionally deactivate the environment
+conda deactivate
 
 # chmod +x run_baseline.sh
 # ./run_baseline.sh
