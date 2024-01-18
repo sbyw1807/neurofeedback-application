@@ -42,7 +42,7 @@ class VisualFeedback(Node):
             ((self.initial_thresholds[2], self.initial_thresholds[3]), (0, 45), 'green'),  # Green: from index 2 to infinity
             ((self.initial_thresholds[1], self.initial_thresholds[2]), (45, 90), 'yellow'),  # Yellow: from index 1 to index 2
             ((self.initial_thresholds[0], self.initial_thresholds[1]), (90, 135), 'orange'),  # Orange: from index 0 to index 1
-            ((0, self.initial_thresholds[0]), (135, 180), 'red')  # Red: from negative infinity to index 0
+            ((0, self.initial_thresholds[0]), (135, 180), 'red')  # Red: from 0 to index 0
         ]
 
         for value_range, angle_range, color in sectors:
