@@ -62,7 +62,7 @@ graphs:
           topic: bands_theta
   
       - id: AlphaMarker
-        module: alpha_marker
+        module: alpha_marker_thresholds
         class: AlphaMarker
 
       - id: ThetaMarker
