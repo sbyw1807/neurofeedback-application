@@ -73,6 +73,10 @@ graphs:
         module: beta_marker
         class: BetaMarker
 
+      - id: RandomPrompt
+        module: random_prompt
+        class: RandomPrompt
+
     edges:
       - source: LSL
         target: Rolling
@@ -86,6 +90,8 @@ graphs:
         target: ThetaMarker
       - source: Bands:beta
         target: BetaMarker
+      - source: Bands:alpha
+        target: RandomPrompt
       - source: LSL
         target: PublisherRaw
       - source: Bands:alpha
