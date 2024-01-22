@@ -6,10 +6,10 @@ import pylsl
 import time
 
 class RandomPrompt(Node):
-    def __init__(self, interval=10000):
+    def __init__(self, interval=30000):
         super().__init__()
         self.interval = interval
-        self._next_prompt_time = time.time() + 120  # Initialize with a 120-second delay
+        self._next_prompt_time = time.time() + 60  # Initialize with a 60-second delay
         self.prompt_window = None
         self.info = pylsl.StreamInfo('Prompts', 'Markers', 1, 0, 'string', 'myprompts1234')
         self.outlet = pylsl.StreamOutlet(self.info)
@@ -20,7 +20,7 @@ class RandomPrompt(Node):
         window.configure(bg='black')  
         label = tk.Label(window, text=prompt, font=("Arial", 40, "bold"), bg="black", fg="white")
         label.pack(padx=50, pady=50)
-        window.after(3000, lambda: self._safe_destroy(window))
+        window.after(10000, lambda: self._safe_destroy(window))
         return window
 
     def _safe_destroy(self, window):
