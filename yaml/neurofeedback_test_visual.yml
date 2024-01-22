@@ -48,7 +48,7 @@ graphs:
           topic: bands
      
       - id: VisualFeedback
-        module: barometer_manual
+        module: barometer_automatically
         class: VisualFeedback
 
       - id: RandomPrompt
@@ -56,7 +56,7 @@ graphs:
         class: RandomPrompt
 
       - id: AlphaMarker
-        module: alpha_marker2
+        module: alpha_marker_shutdown
         class: AlphaMarker
 
     edges:
@@ -68,14 +68,14 @@ graphs:
         target: Bands
       - source: Bands:alpha
         target: VisualFeedback
-      - source: LSL
-        target: PublisherRaw
-      - source: Bands:alpha
-        target: PublisherBands
       - source: Bands:alpha
         target: AlphaMarker
       - source: Bands:alpha
         target: RandomPrompt
+      - source: LSL
+        target: PublisherRaw
+      - source: Bands:alpha
+        target: PublisherBands
 
     rate: 25
 

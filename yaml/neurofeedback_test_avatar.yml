@@ -56,7 +56,7 @@ graphs:
         class: RandomPrompt
 
       - id: AlphaMarker
-        module: alpha_marker2
+        module: alpha_marker_shutdown
         class: AlphaMarker
 
     edges:
