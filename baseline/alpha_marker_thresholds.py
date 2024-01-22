@@ -3,9 +3,10 @@ import numpy as np
 import pandas as pd
 import pylsl
 from timeflux.core.node import Node
+import json
 
 class AlphaMarker(Node):
-    def __init__(self, sample_rate=2, duration=20, file_path="/Users/Sophia/thresholds/baseline_thresholds.txt"):
+    def __init__(self, sample_rate=2, duration=300, file_path="/Users/Sophia/thresholds/baseline_thresholds.json"):
         super().__init__()
         self.sample_rate = sample_rate
         self.duration = duration
@@ -17,34 +18,36 @@ class AlphaMarker(Node):
         self.outlet = pylsl.StreamOutlet(self.stream_info)
 
     def update(self):
-        # Check if the node is receiving data
         if not self.i.ready():
             return
 
-        # Start the timer and initialize data collection
+        current_time = time.time()
+
         if self.start_time is None:
-            self.start_time = time.time()
+            self.start_time = current_time
+            self.last_update_time = current_time
             print("Starting data collection for threshold calculation.")
 
-        # Collect data for the specified duration
-        if not self.thresholds_calculated and time.time() - self.start_time < self.duration:
-            # Get alpha power values from the input data
+        if not self.thresholds_calculated and current_time - self.start_time < self.duration:
+            # Regular update every 10 seconds
+            if current_time - self.last_update_time >= 10:
+                print(f"Data capturing in progress... {int(current_time - self.start_time)} seconds elapsed.")
+                self.last_update_time = current_time
+
             alpha_power_values = self.i.data.values[0]
             alpha_power_mean = np.mean(alpha_power_values)
             self.alpha_values.append(alpha_power_mean)
 
-            # Push alpha value to the LSL outlet and output a DataFrame
             self.outlet.push_sample([alpha_power_mean])
             df = pd.DataFrame({'alpha_power': [alpha_power_mean]})
             self.o.set(df)
+
         elif not self.thresholds_calculated:
-            # Process and save the collected alpha values only once
-            self.thresholds_calculated = True  # Set the flag to true
+            self.thresholds_calculated = True
             print("Threshold calculation initiated.")
 
             if self.alpha_values:
-                # Calculate thresholds
-                bins = np.linspace(min(self.alpha_values), max(self.alpha_values), 5) # min_value, max_value, num_bins+1 -> returns evenly spaced numbers over the specified interval
+                bins = np.linspace(min(self.alpha_values), max(self.alpha_values), 5)
                 thresholds = {
                     "Lower": bins[1],
                     "Middle Lower": bins[2],
@@ -52,9 +55,7 @@ class AlphaMarker(Node):
                     "Upper": bins[4]
                 }
 
-                # Save thresholds to a file
                 timestamp = time.strftime("%Y%m%d%H%M%S")
-                with open(f"{self.file_path}_{timestamp}.txt", "w") as file:
-                    for key, value in thresholds.items():
-                        file.write(f"{key} Threshold: {value}\n")
+                with open(f"{self.file_path}_{timestamp}.json", "w") as file:
+                    json.dump(thresholds, file)
                 print("Thresholds calculated and saved.")
