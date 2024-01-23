@@ -20,8 +20,7 @@ python /Users/Sophia/realtime_plotting_markers.py &
 PID_PLOT=$!
 
 # Wait for the remaining time (total of 300 seconds - 5 minutes since Timeflux started)
-# Adjust the sleep duration to 295 (300 - 5) seconds
-sleep 295
+sleep 305
 
 # Stop all processes
 kill $PID_TIMEFLUX $PID_PLOT
