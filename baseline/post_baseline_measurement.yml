@@ -1,0 +1,193 @@
+graphs:
+
+  # The publish/subscribe broker graph
+  - id: PubSubBroker
+    nodes:
+      - id: Broker
+        module: timeflux.nodes.zmq
+        class: Broker
+
+  # The main processing graph
+  - id: Processing
+    nodes:
+      - id: LSL
+        module: timeflux.nodes.lsl
+        class: Receive
+        params:
+          prop: name
+          value: Micromed
+
+      - id: Rolling
+        module: timeflux.nodes.window
+        class: Window
+        params:
+          length: 1.5
+          step: 0.5
+     
+      - id: Welch
+        module: timeflux_dsp.nodes.spectral
+        class: Welch
+
+      - id: Bands
+        module: timeflux_dsp.nodes.spectral
+        class: Bands
+        params: 
+          bands:
+            alpha: [8, 12]
+            theta: [4, 7]  
+            beta: [13, 30] 
+            
+      - id: PublisherRaw
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: raw
+
+      - id: PublisherAlpha
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: bands_alpha
+
+      - id: PublisherBeta
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: bands_beta
+
+      - id: PublisherTheta
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: bands_theta
+  
+      - id: AlphaMarker
+        module: alpha_marker
+        class: AlphaMarker
+
+      - id: ThetaMarker
+        module: theta_marker
+        class: ThetaMarker
+      
+      - id: BetaMarker
+        module: beta_marker
+        class: BetaMarker
+
+      - id: RandomPrompt
+        module: random_prompt
+        class: RandomPrompt
+
+    edges:
+      - source: LSL
+        target: Rolling
+      - source: Rolling
+        target: Welch
+      - source: Welch
+        target: Bands
+      - source: Bands:alpha
+        target: AlphaMarker
+      - source: Bands:theta
+        target: ThetaMarker
+      - source: Bands:beta
+        target: BetaMarker
+      - source: Bands:alpha
+        target: RandomPrompt
+      - source: LSL
+        target: PublisherRaw
+      - source: Bands:alpha
+        target: PublisherAlpha
+      - source: Bands:beta
+        target: PublisherBeta
+      - source: Bands:theta
+        target: PublisherTheta
+    rate: 25
+
+  # The recorder graph
+  - id: SaveToFile
+    nodes:
+      - id: SubscriberRaw
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics:
+          - raw
+        outputs:
+          - name: raw
+            data_type: dataframe
+
+      - id: RecorderRaw
+        module: timeflux.nodes.hdf5
+        class: Save
+        params:
+          path: "/Users/Sophia/hdf5/baseline/raw"
+        inputs:
+          - name: eeg_raw
+            data_type: dataframe
+
+
+      - id: SubscriberAlpha
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics:
+          - bands_alpha
+        outputs:
+          - name: bands_alpha
+            data_type: dataframe
+
+      - id: RecorderAlpha
+        module: timeflux.nodes.hdf5
+        class: Save
+        params:
+          path: "/Users/Sophia/hdf5/baseline/bands/alpha"
+        inputs:
+          - name: eeg_alpha
+            data_type: dataframe
+
+      - id: SubscriberBeta
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics:
+          - bands_beta
+        outputs:
+          - name: bands_beta
+            data_type: dataframe
+
+      - id: RecorderBeta 
+        module: timeflux.nodes.hdf5
+        class: Save
+        params:
+          path: "/Users/Sophia/hdf5/baseline/bands/beta"
+        inputs:
+          - name: eeg_beta
+            data_type: dataframe
+
+      - id: SubscriberTheta
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics:
+          - bands_theta
+        outputs:
+          - name: bands_theta
+            data_type: dataframe
+
+      - id: RecorderTheta
+        module: timeflux.nodes.hdf5
+        class: Save
+        params:
+          path: "/Users/Sophia/hdf5/baseline/bands/theta"
+        inputs:
+          - name: eeg_theta
+            data_type: dataframe
+
+    edges:
+      - source: SubscriberRaw:raw
+        target: RecorderRaw:eeg_raw
+      - source: SubscriberAlpha:bands_alpha
+        target: RecorderAlpha:eeg_alpha
+      - source: SubscriberBeta:bands_beta
+        target: RecorderBeta:eeg_beta
+      - source: SubscriberTheta:bands_theta
+        target: RecorderTheta:eeg_theta
