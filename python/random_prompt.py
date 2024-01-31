@@ -13,6 +13,7 @@ class RandomPrompt(Node):
         self.prompt_window = None
         self.info = pylsl.StreamInfo('Prompts', 'Markers', 1, 0, 'string', 'myprompts1234')
         self.outlet = pylsl.StreamOutlet(self.info)
+        self.start_time = time.time()  
 
     def _open_new_window(self, prompt):
         window = tk.Tk()
@@ -46,5 +47,18 @@ class RandomPrompt(Node):
             
             self._next_prompt_time = current_time + self.interval / 1000.0
 
+        if current_time - self.start_time >= 300:  # 300 seconds = 5 minutes
+            print("5 minutes elapsed. Initiating shutdown.")
+            self._shutdown_random_prompt()
+
+        if self._next_prompt_time is None:
+            self._next_prompt_time = current_time + self.interval / 1000.0
+
         if self.prompt_window:
             self.prompt_window.update()
+
+    def _shutdown_random_prompt(self):
+        print("Shutting down Random Prompt.")
+        if self.prompt_window:
+            self.prompt_window.destroy()
+        exit(0)  # Stop the script
