@@ -9,6 +9,7 @@ class BetaMarker(Node):
         self.sample_rate = sample_rate
         self.stream_info = pylsl.StreamInfo('BetaPower', 'Markers', 1, self.sample_rate, 'float32', 'betamarker12345')
         self.outlet = pylsl.StreamOutlet(self.stream_info)
+        print("Data capturing initialized for BetaMarker.")
     
     def update(self):
         if self.i.ready():
