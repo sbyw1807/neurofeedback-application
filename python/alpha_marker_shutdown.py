@@ -14,8 +14,8 @@ class AlphaMarker(Node):
     
     def update(self):
         if time.time() - self.start_time >= 300:  # 300 seconds = 5 minutes
-            print("5 minutes elapsed. Initiating shutdown.")
-            self._shutdown_visual_feedback()
+            self.logger.info("5 minutes elapsed. Initiating shutdown.")
+            self._shutdown_timeflux()
 
         if self.i.ready():
             # Get the alpha power values for all channels from the input data
@@ -31,7 +31,6 @@ class AlphaMarker(Node):
             df = pd.DataFrame({'alpha_power': [alpha_power_mean]})
             self.o.set(df)
 
-    def _shutdown_visual_feedback(self):
-        print("Shutting down Visual Feedback.")
-        self.root.destroy()  # Close the tkinter window
-        exit(0)  # Stop the script
+    def _shutdown_timeflux(self):
+        self.logger.info("Shutting down Timeflux.")
+        exit(0)
