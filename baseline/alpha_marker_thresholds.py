@@ -16,6 +16,7 @@ class AlphaMarker(Node):
         self.thresholds_calculated = False  # Flag to track if thresholds have been calculated
         self.stream_info = pylsl.StreamInfo('AlphaPower', 'Markers', 1, self.sample_rate, 'float32', 'alphamarker12345')
         self.outlet = pylsl.StreamOutlet(self.stream_info)
+        print("Data capturing initialized for AlphaMarker.")
 
     def update(self):
         if not self.i.ready():
