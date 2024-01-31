@@ -2,6 +2,7 @@ import numpy as np
 import pyaudio
 import os
 import json
+import time
 from timeflux.core.node import Node
 
 class AuditoryFeedback(Node):
@@ -14,6 +15,7 @@ class AuditoryFeedback(Node):
         self.stream = None
         self.p = pyaudio.PyAudio()
         self.thresholds = self._load_latest_thresholds(threshold_dir)
+        self.start_time = time.time() 
 
         if self.thresholds:
             print(f"Loaded Thresholds:\nLower: {self.thresholds['Lower']}, Upper: {self.thresholds['Upper']}")
@@ -86,6 +88,20 @@ class AuditoryFeedback(Node):
             # Point output to the same data object as input
             self.o.data = alpha_data
 
+        current_time = time.time()
+
+        if current_time - self.start_time >= 300:  # 300 seconds = 5 minutes
+            print("5 minutes elapsed. Initiating shutdown.")
+            self._shutdown_auditory_feedback()
+
+    def _shutdown_auditory_feedback(self):
+        print("Shutting down Auditory Feedback.")
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+        self.p.terminate()
+        exit(0)  # Stop the script
+        
     def terminate(self):
         if self.stream:
             self.stream.stop_stream()
