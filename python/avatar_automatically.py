@@ -4,6 +4,7 @@ import numpy as np
 from timeflux.core.node import Node
 import os
 import json
+import time
 
 class VisualFeedbackAvatar(Node):
 
@@ -17,6 +18,8 @@ class VisualFeedbackAvatar(Node):
         self.canvas = tk.Canvas(self.root, bg='#f2f2f2', width=850, height=350, highlightthickness=0)
         self.canvas.pack(padx=20, pady=20)
 
+        self.start_time = time.time() 
+        
         # Load threshold values
         self.thresholds = self._load_latest_thresholds(threshold_dir)
         if self.thresholds:
@@ -105,6 +108,13 @@ class VisualFeedbackAvatar(Node):
         print(f"Alpha value: {alpha_value}, Status: {status}")
         
     def update(self):
+        
+        current_time = time.time()
+
+        if current_time - self.start_time >= 300:  # 300 seconds = 5 minutes
+            print("5 minutes elapsed. Initiating shutdown.")
+            self._shutdown_visual_feedback_avatar()
+            
         if self.i.ready():
             alpha_data = self.i.data
             if alpha_data is None:
@@ -120,3 +130,8 @@ class VisualFeedbackAvatar(Node):
 
             print(alpha_data.shape)
             print(alpha_data)
+    
+    def _shutdown_visual_feedback_avatar(self):
+        print("Shutting down Visual Feedback Avatar.")
+        self.root.destroy()  # Close the tkinter window
+        exit(0)  # Stop the script
