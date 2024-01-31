@@ -9,7 +9,7 @@ class RandomPrompt(Node):
     def __init__(self, interval=30000):
         super().__init__()
         self.interval = interval
-        self._next_prompt_time = time.time() + 60  # Initialize with a 60-second delay
+        self._next_prompt_time = time.time() + 30  # Initialize with a 30-second delay
         self.prompt_window = None
         self.info = pylsl.StreamInfo('Prompts', 'Markers', 1, 0, 'string', 'myprompts1234')
         self.outlet = pylsl.StreamOutlet(self.info)
