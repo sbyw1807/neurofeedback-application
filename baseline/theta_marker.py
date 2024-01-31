@@ -9,6 +9,7 @@ class ThetaMarker(Node):
         self.sample_rate = sample_rate
         self.stream_info = pylsl.StreamInfo('ThetaPower', 'Markers', 1, self.sample_rate, 'float32', 'thetamarker12345')
         self.outlet = pylsl.StreamOutlet(self.stream_info)
+        print("Data capturing initialized for ThetaMarker.")
     
     def update(self):
         if self.i.ready():
