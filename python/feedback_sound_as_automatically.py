@@ -60,8 +60,13 @@ class AuditoryFeedback(Node):
         min_frequency = 100
         max_frequency = 500
 
-        # Calculate the frequency for a given alpha_mean
-        return (alpha_mean - min_alpha_mean) * (max_frequency - min_frequency) / (max_alpha_mean - min_alpha_mean) + min_frequency
+        # Calculate the frequency for a given alpha_mean using linear mapping
+        frequency = (alpha_mean - min_alpha_mean) * (max_frequency - min_frequency) / (max_alpha_mean - min_alpha_mean) + min_frequency
+    
+        # Clamp the frequency within the [min_frequency, max_frequency] range
+        frequency = np.clip(frequency, min_frequency, max_frequency)
+
+    return frequency
 
     def update(self):
         if self.i.ready():
