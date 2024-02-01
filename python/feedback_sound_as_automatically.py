@@ -66,7 +66,7 @@ class AuditoryFeedback(Node):
         # Clamp the frequency within the [min_frequency, max_frequency] range
         frequency = np.clip(frequency, min_frequency, max_frequency)
 
-    return frequency
+        return frequency
 
     def update(self):
         if self.i.ready():
