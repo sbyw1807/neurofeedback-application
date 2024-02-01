@@ -18,7 +18,7 @@ class RandomPrompt(Node):
     def _open_new_window(self, prompt):
         window = tk.Tk()
         window.title("Neurofeedback Prompt")
-        window.configure(bg='black')
+        window.configure(bg='white')
         
         # Set text color based on the prompt
         text_color = "green" if "increase" in prompt else "red"
