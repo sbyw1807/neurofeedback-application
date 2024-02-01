@@ -13,7 +13,7 @@ class AlphaMarker(Node):
         self.outlet = pylsl.StreamOutlet(self.stream_info)
     
     def update(self):
-        if time.time() - self.start_time >= 300:  # 300 seconds = 5 minutes
+        if time.time() - self.start_time >= 305:  # 300 seconds = 5 minutes
             self.logger.info("5 minutes elapsed. Initiating shutdown.")
             self._shutdown_timeflux()
 
