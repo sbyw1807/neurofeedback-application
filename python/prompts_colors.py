@@ -51,7 +51,7 @@ class RandomPrompt(Node):
             
             self._next_prompt_time = current_time + self.interval / 1000.0
 
-        if current_time - self.start_time >= 300:  # 300 seconds = 5 minutes
+        if current_time - self.start_time >= 310:  # 300 seconds = 5 minutes
             print("5 minutes elapsed. Initiating shutdown.")
             self._shutdown_random_prompt()
 
