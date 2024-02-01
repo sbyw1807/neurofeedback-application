@@ -6,7 +6,7 @@ from timeflux.core.node import Node
 import json
 
 class AlphaMarker(Node):
-    def __init__(self, sample_rate=2, duration=300, file_path="/Users/Sophia/thresholds/baseline_thresholds.json"):
+    def __init__(self, sample_rate=2, duration=60, file_path="/Users/Sophia/thresholds/baseline_thresholds.json"):
         super().__init__()
         self.sample_rate = sample_rate
         self.duration = duration
@@ -48,12 +48,21 @@ class AlphaMarker(Node):
             print("Threshold calculation initiated.")
 
             if self.alpha_values:
-                bins = np.linspace(min(self.alpha_values), max(self.alpha_values), 5)
+                # Data Smoothing (e.g., Moving Average)
+                smoothed_values = pd.Series(self.alpha_values).rolling(window=5, min_periods=1).mean()
+
+                # Outlier Removal (using IQR)
+                Q1 = np.percentile(smoothed_values, 25)
+                Q3 = np.percentile(smoothed_values, 75)
+                IQR = Q3 - Q1
+                filtered_values = smoothed_values[~((smoothed_values < (Q1 - 1.5 * IQR)) | (smoothed_values > (Q3 + 1.5 * IQR)))]
+
+                # Percentile-Based Thresholds
                 thresholds = {
-                    "Lower": bins[1],
-                    "Middle Lower": bins[2],
-                    "Middle Upper": bins[3],
-                    "Upper": bins[4]
+                    "Lower": np.percentile(filtered_values, 25),
+                    "Middle Lower": np.percentile(filtered_values, 50),  # Median
+                    "Middle Upper": np.percentile(filtered_values, 75),
+                    "Upper": np.percentile(filtered_values, 95)  # Higher percentile for upper limit
                 }
 
                 timestamp = time.strftime("%Y%m%d%H%M%S")
