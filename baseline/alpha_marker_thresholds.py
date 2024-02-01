@@ -6,7 +6,7 @@ from timeflux.core.node import Node
 import json
 
 class AlphaMarker(Node):
-    def __init__(self, sample_rate=2, duration=60, file_path="/Users/Sophia/thresholds/baseline_thresholds.json"):
+    def __init__(self, sample_rate=2, duration=300, file_path="/Users/Sophia/thresholds/baseline_thresholds.json"):
         super().__init__()
         self.sample_rate = sample_rate
         self.duration = duration
